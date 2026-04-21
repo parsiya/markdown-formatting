@@ -814,7 +814,7 @@ regex matches exactly `^---\n` (3 dashes at the start of the file), so
 
 ### Preserving Content with Placeholders (`preserveContent` Factory)
 **The problem:** Remark's parser (micromark) destroys certain content that isn't
-standard markdown. Hugo shortcodes like `{{< xref ... >}}` lose their leading
+standard markdown. Hugo shortcodes like `{{ < xref ... >}}` lose their leading
 indentation (1-3 leading spaces are "insignificant" per the CommonMark spec and
 are stripped during tokenization), and characters like `<`, `{`, `>` can be
 escaped or misinterpreted. This happens in the **parser**, not the serializer —
@@ -883,23 +883,11 @@ Usage in the plugins array:
 plugins: [
   // Frontmatter must run first so later plugins see the body only.
   preserveFrontmatter,
-  // Hugo shortcodes: {{< ... >}} and {{- ... -}}
+  // Hugo shortcodes: {{ < ... >}} and {{ - ... -}}
   preserveContent(/\{\{<[\s\S]*?>}}|\{\{-[\s\S]*?-}}/g, 'SHORTCODE'),
   // Could add more patterns with different labels:
   // preserveContent(/<!-- raw -->[\s\S]*?<!-- \/raw -->/g, 'RAWBLOCK'),
 ]
-```
-
-Examples of content preserved byte-for-byte:
-
-```markdown
-{{< xref path="/post/2026/2026-03-31-manual-context/"
-  text=" In Manual Context is a Bug"
-  title="Manual Context is a Bug" >}}
-
-Inline: {{< ref "other-post" >}} inside a paragraph.
-
-{{- comment style shortcode -}}
 ```
 
 All leading spaces, line breaks, and special characters inside the shortcode are
@@ -946,8 +934,8 @@ URLs, which escapes ~20 ASCII punctuation characters (`[`, `(`, `<`, `_`, `&`,
 
 This breaks:
 
-* Hugo shortcodes: `[text]({{<relref "file">}})` becomes
-  `\[text]\({{\<relref "file">}})`
+* Hugo shortcodes: `[text]({{ <relref "file">}})` becomes
+  `\[text]\({{\ <relref "file">}})`
 
 * Placeholder brackets: `[author(s)]` becomes `\[author(s)]`
 * Underscores in text: `some_variable_name` becomes `some\_variable\_name`
