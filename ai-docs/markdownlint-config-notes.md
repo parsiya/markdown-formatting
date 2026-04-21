@@ -31,7 +31,6 @@ If you just want to get set up quickly, do this first:
    ```
 2. Copy the [custom rule file][rule] to `~/.markdownlint/rules/markdown-format-rules.cjs`
   1. You can change the name of the file.
-  2.
 3. Create `~/.markdownlint/.markdownlint.jsonc` with this content:
     ```json
     {

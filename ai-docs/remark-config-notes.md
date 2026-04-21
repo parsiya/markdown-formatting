@@ -38,7 +38,6 @@ The two main packages are:
 
 * `remark-frontmatter` — would handle YAML frontmatter natively (replaces our
   `preserveFrontmatter` parser+compiler wrapper).
-
 * `remark-gfm` — would parse tables into proper `table`/`tableRow`/`tableCell`
   AST nodes (replaces our `formatTables` compiler wrapper and `looksLikeTable`
   helper). Would also fix `headingJoin` not needing the table detection hack.
@@ -47,15 +46,12 @@ Tradeoffs:
 
 * Inline-only avoids `package.json` and `node_modules`, but needs more custom
   code and more workarounds for things remark does not parse natively.
-
 * Installed plugins add `package.json`, `package-lock.json`, and
   `node_modules/`, but remove the table/frontmatter hacks and are easier to
   reason about.
-
 * vscode-remark still cannot reliably use globally installed plugins in
   Remote/WSL setups, so installed plugins should be local to the repo or a
   shared parent directory.
-
 * VS Code settings:
 
 ```json
@@ -213,7 +209,6 @@ A join function receives `(left, right, parent, state)` and returns:
 * `0` - no blank line (just `\n`).
 * `1` or `true` - one blank line (default `\n\n`). Stops further join
   processing.
-
 * Any number `n` - `n` blank lines (`\n` repeated `n+1` times).
 * `false` - nodes can't be adjacent, inserts an HTML comment to break them.
 * `undefined` - no opinion, try next join function. If all return undefined, the
@@ -363,10 +358,8 @@ Key points:
 
 * The function passed to `plugins: []` is called during processor setup with
   `this` bound to the processor.
-
 * It can also return a setup-only plugin that wraps the parser or compiler
   instead of returning a tree transformer.
-
 * Tree nodes have `.type`, `.value` (for text/code), `.children` (for
   containers), `.depth` (for headings 1-6).
 
@@ -754,7 +747,6 @@ How it works:
 1. `Parser wrapper:` Before remark parses, checks if the document starts with
    `---\n...\n---\n`. If found, saves the entire frontmatter block and strips
    it from the input so remark only sees the markdown content.
-
 2. `Compiler wrapper:` After remark serializes, prepends the saved frontmatter
    to the output.
 
@@ -830,7 +822,6 @@ technique. Takes two parameters:
 
 * `pattern` — RegExp with the global flag (`g`) matching content to preserve.
   Must use `[\s\S]*?` (not `.`) for multi-line matching.
-
 * `label` — Alphanumeric string for unique placeholder names. Placeholders look
   like `REMARK<label><index>END` (e.g., `REMARKSHORTCODE0END`).
   Must be unique across all `preserveContent` instances to avoid collisions.
@@ -913,11 +904,9 @@ that don't fit the factory:
 1. `Position-specific match.` Frontmatter must match only at `^` (start of
    file) and only once. `preserveContent` is designed for global regex (`g`
    flag) matching anywhere in the document.
-
 2. `Extra blank line.` `preserveFrontmatter` adds an extra `\n` between the
    closing `---` and the first content line. `preserveContent` does straight
    replacement with no whitespace adjustment.
-
 3. `Removal vs. replacement.` `preserveFrontmatter` removes the frontmatter
    entirely so remark never sees it. `preserveContent` replaces with a
    placeholder that remark parses as text inside a paragraph node. Both
@@ -972,10 +961,8 @@ skip it entirely. Three handlers cover all escaping:
 
 * `text` — plain text content. Default calls `state.safe()`. Override returns
   `node.value` directly.
-
 * `link` — inline link URLs `[text](url)`. Default calls `state.safe()` on
   `node.url`. Override outputs `node.url` directly.
-
 * `definition` — reference definitions `[label]: url`. Default calls
   `state.safe()` on `node.url`. Override outputs `node.url` directly.
 
@@ -1059,7 +1046,6 @@ a regex. This had two problems:
 
 1. Playing whack-a-mole: every new escaped character (`&`, `!`, etc.) needed
    adding to the regex.
-
 2. Stripping ALL ASCII punctuation escapes was unsafe — some escapes (like `\#`
    at a line start) are semantically meaningful.
 
@@ -1106,10 +1092,8 @@ depth:
 * `.remarkrc.json` with `"plugins": ["./path/to/plugin.js"]` - fails with
   "Cannot parse file" because the bundled `load-plugin` uses ESM `import()` and
   without `package.json`, `.js` files are treated as CJS.
-
 * Separate `.mjs` plugin files referenced from config - loads without error but
   plugin doesn't apply (silent failure).
-
 * Using `require()` in `.remarkrc.mjs` - not available in ESM context.
 
 ### Solution: define all plugin functions inline in `.remarkrc.mjs`
@@ -1398,11 +1382,9 @@ export default {
   ```
 * Then run test scripts with `node test.mjs` to verify settings/plugins work
   before putting them in the vscode config.
-
 * The extension source is at
   `~/.vscode-server/extensions/unifiedjs.vscode-remark-3.2.0/out/remark-language-server.js`
   (minified, but searchable).
-
 * After every change to `.remarkrc.mjs`, reload the VS Code window, then save
   the test file to verify.
 
@@ -1411,7 +1393,6 @@ export default {
 1. Write the plugin function inline in `.remarkrc.mjs`.
 2. Add it to `plugins: []` array (for tree transformers) or `settings.join`
    (for blank line control).
-
 3. Reload VS Code window (Ctrl+Shift+P -> "Developer: Reload Window").
 4. Open and save `test-markdown/formatting-issues.md`.
 5. Verify the formatting change was applied.
@@ -1424,114 +1405,93 @@ export default {
 1. `Reload the window after every config change.` The language server caches
    `.remarkrc.mjs` via Node's ES module cache. No reload = old config. See
    [Window Reload Required](#window-reload-required).
-
 2. `All plugins must be inline in .remarkrc.mjs.` Separate plugin files
    fail silently or throw errors because the bundled `load-plugin` can't resolve
    local paths without `package.json`. See
    [Plugin Loading Failures](#plugin-loading-failures-what-doesnt-work).
-
 3. `Use .remarkrc.mjs, not .remarkrc.json.` JSON configs can't contain
    functions (needed for `join` and plugins). ESM config loaded via `import()`
    preserves functions. See [Config File Structure](#config-file-structure).
-
 4. `join is the only way to control blank lines between blocks.` There's no
    boolean setting. remark-stringify adds `\n\n` between all blocks by default.
    The `tightDefinitions` setting only covers definition lists. See
    [Join Functions](#join-functions-blank-line-control).
-
 5. `Whitelist removal, not blacklist.` When writing join functions, check for
    the specific type you want to change (e.g., `paragraph`) and return the
    default for everything else. This prevents new block types (tables,
    blockquotes, HTML) from needing updates. See
    [headingJoin Implementation](#headingjoin-implementation).
-
 6. `Plugins must return a transformer function.` A plugin that only sets up
    data on the processor (e.g., `this.data()`) returns nothing. A plugin that
    modifies the tree must `return (tree) => { ... }`. See
    [Tree Transformer Plugins](#tree-transformer-plugins).
-
 7. `listItemIndent takes the string 'one', not the number 1.` Easy
    mistake that silently produces wrong output. See
    [Settings](#settings-remark-stringify-options).
-
 8. `Don't update tracking state from converted nodes.` The `boldToHeading`
    plugin initially updated `lastDepth` after each conversion, causing
    consecutive bolds to cascade (`####` -> `#####` -> `######`). Fix: only
    update depth from pre-existing headings. See
    [Bug: cascading depth escalation](#bug-cascading-depth-escalation).
-
 9. `AST node replacement is in-place.` Assign directly to
    `parent.children[i]` to replace a node. No need to splice or rebuild arrays.
    See [boldToCodeInLists](#boldtocodeinlists-implementation) and
    [boldToHeading](#boldtoheading-implementation).
-
 10. `Test standalone before testing in vscode-remark.` The extension's
     language server adds layers of complexity (config loading, module caching,
     processor cloning). Isolate plugin logic in `/tmp/remark-test/` first. See
     [Debugging Tips](#debugging-tips).
-
 11. `remark already handles some rules by default.` Blank lines between text
     and lists, fenced code blocks, and ATX headings are all default behavior.
     Check before writing a plugin. See
     [Rule-to-Setting Mapping](#rule-to-setting-mapping).
-
 12. `listItem is shared by ordered and unordered lists.` The list type is on
     the parent `list` node, not on items. Plugins targeting `listItem` work for
     both list types automatically. See
     [boldToCodeInLists](#boldtocodeinlists-implementation).
-
 13. `Only match bold that is the sole paragraph content.` Both
     `boldToCodeInLists` (first child of list paragraph) and `boldToHeading`
     (only child of root paragraph) avoid converting legitimate emphasis that
     appears alongside other text.
-
 14. `Without remark-gfm, tables are paragraph nodes.` They are NOT parsed
     into `table`/`tableRow`/`tableCell` AST nodes. This affects table formatting
     (can't use a tree transformer) and join functions (tables look like
     paragraphs). Fix: inspect the paragraph content for a delimiter row to
     detect tables. See [formatTables](#formattables-implementation) and
     [headingJoin and tables](#headingjoin-and-tables).
-
 15. `Compiler wrappers are a different plugin pattern.` Instead of returning
     `(tree) => {...}`, the plugin uses `this` to access the processor and wraps
     `self.compiler`. This allows post-processing the serialized markdown string,
     avoiding AST escaping issues. See
     [formatTables](#formattables-implementation).
-
 16. `remark-stringify escapes markdown syntax in text nodes.` If you replace
     mixed AST children (text + inlineCode) with a single `text` node containing
     backticks, remark will escape them to ```. Operate on the serialized string
     instead when the content contains markdown syntax.
-
 17. `Without remark-frontmatter, frontmatter is destroyed.` Remark parses
     `---` as `thematicBreak` (`***`) and YAML list items as markdown lists.
     Fix: strip frontmatter before parsing, re-add after serialization. See
     [preserveFrontmatter](#preservefrontmatter-implementation).
-
 18. `Wrap self.parser/self.compiler, not self.parse/self.stringify.`
     The processor has own properties (`parser`, `compiler`) and prototype
     methods (`parse`, `stringify`). Wrapping the prototype methods works in
     standalone remark but fails in vscode-remark — the language server copies
     own properties but not prototype overrides. Always wrap the own properties.
     See [Bug: wrapping self.parse vs self.parser](#bug-wrapping-selfparse-vs-selfparser).
-
 19. `remark-stringify escapes ~20 ASCII punctuation characters in text and URLs.` The `unsafe` patterns in `mdast-util-to-markdown` are hardcoded
     defaults. The `unsafe` config option only appends — `configure()` always
     pushes, never replaces. Fix: override the `text`, `link`, and `definition`
     handlers in `settings.handlers` to skip `state.safe()`. This is cleaner
     than the earlier `removeEscapes` compiler wrapper approach. See
     [Disabling Escaping with Custom Handlers](#disabling-escaping-with-custom-handlers).
-
 20. `tightDefinitions: true removes blank lines between reference link
     definitions.` Built-in `remark-stringify` setting. Equivalent to a join
     function returning `0` for two adjacent `definition` nodes.
-
 21. `Custom handlers in settings override how specific AST nodes are
     serialized.` Each key is a node type (`text`, `link`, `definition`, etc.),
     each value is a function `(node, parent, state, info) -> string`. The
     default handlers call `state.safe()` for escaping; custom handlers can skip
     it. Handlers are passed via `settings.handlers` in `.remarkrc.mjs`.
-
 22. `Bold with inline code inside has multiple AST children.` `**Use
     `.remarkrc.mjs`**` is parsed as `strong -> [text("Use "),
     inlineCode(".remarkrc.mjs")]`, not a single text child. To convert it to
@@ -1539,7 +1499,6 @@ export default {
     concatenate all `.value` properties into one string. Both node types have
     `.value`. See
     [Bug: bold with inline code was not converted](#bug-bold-with-inline-code-was-not-converted).
-
 23. `Remark normalizes thematic breaks — use rule + ruleRepetition to control
     output.` All thematic breaks (`---`, `***`, `* * *`, `----------`) become a
     single `thematicBreak` AST node with no memory of the original. `rule: '-'`
@@ -1550,7 +1509,6 @@ export default {
     behavior. The `rule` setting does NOT affect frontmatter — `preserveFrontmatter`
     strips it before remark parses. See
     [Thematic Break Normalization](#thematic-break-normalization-rule--rulerepetition).
-
 24. `Use the preserveContent placeholder pattern to protect content remark
     destroys.` Remark's parser strips 1-3 leading spaces (CommonMark spec) and
     mangles non-markdown syntax like Hugo shortcodes. No parser setting to
@@ -1695,7 +1653,6 @@ Current guidance:
 
 * Use the installed-plugin setup when you want the simpler, more maintainable
   `.remarkrc.mjs` and are willing to keep a small Node setup in the repo.
-
 * Use the inline-only setup when avoiding `package.json` and `node_modules/`
   matters more than config simplicity.
 
@@ -1718,23 +1675,18 @@ Key design:
 * `Block detection` — Parses markdown into block types: paragraphs, list
   items, blockquotes, headings, code blocks, tables, HTML. Each type has
   different wrapping rules.
-
 * `Tables, headings, code blocks` — `NoWrap` (never wrapped).
 * `Paragraphs` — All lines concatenated into one string, then broken at word
   boundaries to fit within the configured column width.
-
 * `List items` — Parsed with their prefix (`* `, `1. `, etc.). Continuation
   lines get indentation matching the prefix width (e.g., 2 spaces for `* `, 3
   for `1. `). Content is recursively parsed (a list item can contain
   paragraphs, sub-lists, code blocks, etc.).
-
 * `Block quotes` — `> ` prefix stripped, content recursively parsed and
   wrapped, then `> ` re-added.
-
 * `Break position search` — Searches backwards from the column limit to find a
   valid break position. Handles CJK characters (can break between any two CJK
   chars without spaces).
-
 * `Line concatenation` — When joining lines before re-breaking, adds a space
   between words but not between CJK characters. Optional double-space after
   sentence-ending punctuation (`.`, `?`, `!`).
@@ -1774,17 +1726,12 @@ function wrapLines() {
 ### Edge Cases to Handle
 
 * `Don't break URLs` — A URL in a paragraph shouldn't be split across lines.
-* `Don't break inline code` — Backtick spans should stay on one line if
-  possible.
-
+* `Don't break inline code` — Backtick spans should stay on one line if possible.
 * `List continuation indent` — Must match the list marker width: 2 for `* `,
   3 for `1. `, 4 for `10. `, etc.
-
 * `Nested lists` — Each nesting level adds its own indent.
 * `Nested block quotes` — `> > ` for double-nested, etc.
-* `Lines ending in \ or <br>` — Hard line breaks, don't join with next
-  line.
-
+* `Lines ending in \ or <br>` — Hard line breaks, don't join with next line.
 * `Already short lines` — Don't re-wrap lines that are already under the
   limit unless they're part of a paragraph that could be reflowed.
 
@@ -1793,10 +1740,8 @@ The extension has no access to VS Code settings from `.remarkrc.mjs`. Options:
 
 1. `Hardcode in .remarkrc.mjs` — e.g., `wrapMarkdown(result, 80)`. Simple,
    must be changed manually if the ruler changes.
-
 2. `Read from an environment variable` — e.g., `process.env.REMARK_COLUMNS`
    with a fallback to 80.
-
 3. `Read editor.rulers from settings.json` — Technically possible via
    `fs.readFileSync` but fragile and platform-dependent.
 
@@ -1811,22 +1756,3 @@ The Rewrap extension reads the column width from (in priority order):
 `rewrap.wrappingColumn`, `editor.rulers`, `editor.wordWrapColumn`. Our
 `.remarkrc.mjs` runs inside the language server's Node.js process and cannot
 access VS Code settings APIs.
-
-### Reference Materials for Future Implementation
-If someone decides to build this later, the following resources are available:
-
-* `Rewrap source` — Cloned to `/tmp/Rewrap/`. Key files:
-  `/core/Wrapping.fs` (152 lines, break/concat logic),
-  `/core/Parsing.Markdown.fs` (336 lines, block detection),
-  `/core/Block.fs` (66 lines, block types).
-  `/vscode/src/Settings.ts` (column width detection).
-
-* `markdown-table source` — `/tmp/markdown-table/index.js` (393 lines). Good
-  reference for how to build a string formatter that pads/aligns content.
-
-* `mdast-util-gfm-table source` — `/tmp/mdast-util-gfm-table/lib/index.js`
-  (300 lines). Shows how to register custom serialization handlers via
-  `toMarkdownExtensions`.
-
-* `remark-gfm source` — `/tmp/remark-gfm/`. Shows the three-stage plugin
-  pattern: parser + AST builder + serializer.
