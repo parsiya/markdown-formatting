@@ -1,0 +1,30 @@
+{
+  // Start from a blank slate.
+  "default": false,
+
+  // Keep these built-in rules:
+  // - MD004: use * for bullet lists
+  // - MD030: require one space after list markers
+  // - MD055: keep leading and trailing | in tables
+  // - MD056: keep table column counts consistent
+  // - MD058: keep blank lines around tables
+  "MD004": { "style": "asterisk" },
+  "MD030": {
+    "ul_single": 1,
+    "ul_multi": 1,
+    "ol_single": 1,
+    "ol_multi": 1
+  },
+  "MD055": { "style": "leading_and_trailing" },
+  "MD056": true,
+  "MD058": true,
+
+  // Our custom rules.
+  "markdown-format-block-spacing": true,
+  "markdown-format-ascii-arrows": true,
+  "markdown-format-bold-list-code": true,
+  "markdown-format-bold-heading": true,
+  "markdown-format-tight-definitions": true,
+  "markdown-format-thematic-break": true,
+  "markdown-format-table-align": true
+}
