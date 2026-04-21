@@ -7,6 +7,7 @@ categories:
 title: "vscode-remark Configuration Notes"
 wip: false
 snippet: "Automatically format markdown with unifiedjs.remark in VS Code"
+url: /ai-docs/markdown-formatting/remark-config-notes/
 ---
 
 # vscode-remark Configuration Notes

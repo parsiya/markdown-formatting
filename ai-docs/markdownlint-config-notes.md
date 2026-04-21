@@ -7,6 +7,7 @@ categories:
 title: "markdownlint Configuration Notes"
 wip: false
 snippet: "Automatically format markdown with markdownlint in VS Code"
+url: /ai-docs/markdown-formatting/markdownlint-config-notes/
 ---
 
 # Central markdownlint rules in WSL
